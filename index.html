@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Palestra</title>
+  <meta name="theme-color" content="#14171b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Palestra">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="update" class="update" hidden><span>Nuova versione disponibile</span><button class="btn primary sm">Aggiorna</button></div>
+  <main id="main"></main>
+  <nav id="nav">
+    <a href="#/"><svg viewBox="0 0 24 24"><path d="M6 3h12v18H6zM9.500 8h5M9.500 12h5M9.500 16h3"/></svg>Schede</a>
+    <a href="#/esercizi"><svg viewBox="0 0 24 24"><path d="M3 9v6M6.500 6.500v11M17.500 6.500v11M21 9v6M6.500 12h11"/></svg>Esercizi</a>
+    <a href="#/storico"><svg viewBox="0 0 24 24"><path d="M4 6h16v15H4zM4 10h16M8 3v4M16 3v4"/></svg>Storico</a>
+    <a href="#/statistiche"><svg viewBox="0 0 24 24"><path d="M3 20h18M6 16l4-5 4 3 5-8"/></svg>Statistiche</a>
+  </nav>
+  <div id="toast" role="status"></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
