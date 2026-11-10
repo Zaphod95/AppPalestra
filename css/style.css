@@ -156,6 +156,12 @@ b { font-weight: 650; }
 .htrack i { display: block; height: 100%; min-width: 4px; background: var(--accent); border-radius: 0 4px 4px 0; opacity: .85; }
 .hval { text-align: right; color: var(--ink-2); }
 
+.guide-link { align-self: flex-start; padding: 0; margin-top: -4px; }
+.guide { margin: 0; }
+.guide dt { font-weight: 650; margin-top: 12px; }
+.guide dt:first-child { margin-top: 0; }
+.guide dd { margin: 3px 0 0; color: var(--ink-2); font-size: 15px; }
+
 .radio { display: flex; gap: 12px; padding: 8px 0; cursor: pointer; }
 .radio input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--accent); flex: none; }
 .radio b { display: block; }

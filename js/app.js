@@ -7,6 +7,7 @@ import { workoutView } from './workout.js';
 import { historyView, workoutDetailView } from './history.js';
 import { progressView } from './progress.js';
 import { dataView } from './data.js';
+import { guideView } from './guide.js';
 
 const main = document.getElementById('main');
 const nav = document.getElementById('nav');
@@ -21,6 +22,7 @@ const ROUTES = [
   [/^#\/storico\/([^/]+)$/, workoutDetailView, '#/storico'],
   [/^#\/statistiche$/, progressView, '#/statistiche'],
   [/^#\/dati$/, dataView, '#/'],
+  [/^#\/guida$/, guideView, '#/statistiche'],
 ];
 
 let ticket = 0;

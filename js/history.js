@@ -62,6 +62,7 @@ export async function workoutDetailView(main, id) {
       ${tile('Completamento', s.completion === null ? '–' : `${Math.round(s.completion * 100)}%`)}
     </div>
     ${prevW ? `<p class="hint">Confronto con ${esc(prevW.dayName)} del ${dateShort(prevW.startedAt)}.</p>` : '<p class="hint">Al prossimo allenamento di questo giorno vedrai il confronto.</p>'}
+    <a class="link guide-link" href="#/guida">Cosa significano questi valori?</a>
 
     ${prs.length ? `<section class="card pr"><h2>★ Nuovi record</h2>${prs.map((r) => `<div class="pr-row"><b>${esc(r.name)}</b><small>${r.types.map((t) => `${t.label}: ${num(t.value, 1)} ${t.unit}`).join(' · ')}</small></div>`).join('')}</section>` : ''}
 

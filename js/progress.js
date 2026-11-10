@@ -37,10 +37,11 @@ export async function progressView(main) {
   const exOptions = [...names].sort((a, b) => a[1].localeCompare(b[1], 'it'));
   const muscles = muscleTotals(workouts, Date.now() - 30 * 864e5);
 
-  let dayId = 'all', exId = exOptions[0]?.[0], metric = 'topKg';
+  // Giorni diversi hanno volumi diversi: si parte dal giorno fatto più di recente.
+  let dayId = [...workouts].sort((a, b) => b.startedAt - a.startedAt)[0].dayId, exId = exOptions[0]?.[0], metric = 'topKg';
 
   main.innerHTML = `
-    <header class="top"><h1>Statistiche</h1></header>
+    <header class="top"><h1>Statistiche</h1><a class="link" href="#/guida">Cosa significano?</a></header>
     <div class="tiles">
       ${tile('Allenamenti', workouts.length)}
       ${tile('Questa settimana', thisWeek)}
@@ -50,7 +51,7 @@ export async function progressView(main) {
     <section class="card"><h2>Volume per settimana</h2><div data-weeks></div></section>
     <section class="card">
       <h2>Volume per allenamento</h2>
-      <select class="field" data-day aria-label="Giorno della scheda"><option value="all">Tutti i giorni</option>${[...days].map(([id, n]) => `<option value="${esc(id)}">${esc(n)}</option>`).join('')}</select>
+      <select class="field" data-day aria-label="Giorno della scheda"><option value="all">Tutti i giorni</option>${[...days].map(([id, n]) => `<option value="${esc(id)}" ${id === dayId ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>
       <div data-sessions></div>
     </section>
     ${exOptions.length ? `<section class="card">
