@@ -1,16 +1,25 @@
 // Archivio locale (IndexedDB): tutti i dati restano sul dispositivo.
 const NAME = 'palestra';
-const STORES = ['exercises', 'plans', 'workouts', 'meta'];
+const VERSION = 2;
+const STORES = ['exercises', 'plans', 'workouts', 'meta', 'body'];
 let conn;
 
 function open() {
   if (conn) return conn;
   conn = new Promise((resolve, reject) => {
-    const req = indexedDB.open(NAME, 1);
+    const req = indexedDB.open(NAME, VERSION);
+    // Le versioni nuove aggiungono contenitori senza toccare quelli esistenti.
     req.onupgradeneeded = () => {
-      for (const s of STORES) req.result.createObjectStore(s, { keyPath: 'id' });
+      for (const s of STORES) {
+        if (!req.result.objectStoreNames.contains(s)) req.result.createObjectStore(s, { keyPath: 'id' });
+      }
     };
-    req.onsuccess = () => resolve(req.result);
+    req.onsuccess = () => {
+      const d = req.result;
+      // Se un'altra scheda aggiorna l'archivio, questa si ricarica con il codice nuovo.
+      d.onversionchange = () => { d.close(); location.reload(); };
+      resolve(d);
+    };
     req.onerror = () => reject(req.error);
   });
   return conn;

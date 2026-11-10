@@ -1,7 +1,7 @@
 // Storico e statistiche del singolo allenamento.
 import * as db from './db.js';
 import { actions, confirmBox, dateLong, dateShort, duration, esc, monthLabel, num, setText, thumb, toast } from './ui.js';
-import { doneSets, e1rm, exerciseStats, personalRecords, previousExercise, previousWorkout, workoutStats } from './stats.js';
+import { bodyweightAt, doneSets, e1rm, exerciseStats, isBodyweight, personalRecords, previousExercise, previousWorkout, setLoad, workoutStats } from './stats.js';
 import { hbars } from './charts.js';
 
 const go = (h) => { location.hash = h; };
@@ -89,18 +89,23 @@ export async function workoutDetailView(main, id) {
 }
 
 function exerciseCard(ex, w, all, lib) {
-  const s = exerciseStats(ex);
+  const s = exerciseStats(ex, w.startedAt);
   if (!s.sets) return `<section class="card muted-card"><div class="ex-head">${thumb(lib.get(ex.exerciseId), 'sm')}<div class="grow"><h2>${esc(ex.name)}</h2><small class="cap">Non eseguito</small></div></div></section>`;
   const prevEx = previousExercise(w, ex.exerciseId, all);
-  const p = prevEx ? exerciseStats(prevEx) : null;
+  const p = prevEx ? exerciseStats(prevEx.ex, prevEx.t) : null;
+  const bw = isBodyweight(ex);
+  const body = bw ? bodyweightAt(w.startedAt) : 0;
   return `<section class="card">
-    <div class="ex-head">${thumb(lib.get(ex.exerciseId), 'sm')}<div class="grow"><h2>${esc(ex.name)}</h2><small class="cap">${esc(ex.muscle)}</small></div></div>
-    <table class="sets-table"><thead><tr><th>Serie</th><th>Kg</th><th>Rip</th><th>1RM st.</th></tr></thead><tbody>
-      ${doneSets(ex).map((x, i) => `<tr><td>${i + 1}</td><td>${num(x.kg, 2)}</td><td>${x.reps}</td><td>${x.kg > 0 ? num(e1rm(x.kg, x.reps), 1) : '–'}</td></tr>`).join('')}
+    <div class="ex-head">${thumb(lib.get(ex.exerciseId), 'sm')}<div class="grow"><h2>${esc(ex.name)}</h2><small class="cap">${esc(ex.muscle)}${bw ? (body ? ` · corpo libero, peso corporeo ${num(body, 1)} kg` : ' · corpo libero') : ''}</small></div></div>
+    <table class="sets-table"><thead><tr><th>Serie</th><th>${bw ? 'Zavorra' : 'Kg'}</th><th>Rip</th><th>1RM st.</th></tr></thead><tbody>
+      ${doneSets(ex).map((x, i) => {
+        const load = setLoad(ex, x, w.startedAt);
+        return `<tr><td>${i + 1}</td><td>${bw && !x.kg ? '–' : num(x.kg, 2)}</td><td>${x.reps}</td><td>${load > 0 ? num(e1rm(load, x.reps), 1) : '–'}</td></tr>`;
+      }).join('')}
     </tbody></table>
     <div class="mini">
       <div><small>Volume</small><b>${num(s.volume, 0)} kg</b>${delta(s.volume, p?.volume)}</div>
-      <div><small>Serie migliore</small><b>${esc(setText(s.bestSet))}</b></div>
+      <div><small>Serie migliore</small><b>${esc(setText(s.bestSet, bw))}</b></div>
       <div><small>1RM stimato</small><b>${s.e1rm ? `${num(s.e1rm, 1)} kg` : '–'}</b>${s.e1rm ? delta(s.e1rm, p?.e1rm) : ''}</div>
     </div>
     ${ex.note ? `<p class="note-text">${esc(ex.note)}</p>` : ''}

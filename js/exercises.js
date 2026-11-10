@@ -46,6 +46,8 @@ function editor(original, isNew, onDone) {
     <input class="field" data-name value="${esc(ex.name)}" autocomplete="off">
     <label class="label">Gruppo muscolare</label>
     <select class="field" data-muscle>${MUSCLES.map((m) => `<option ${m === ex.muscle ? 'selected' : ''}>${m}</option>`).join('')}</select>
+    <label class="radio"><input type="checkbox" data-bw ${ex.bw > 0 ? 'checked' : ''}>
+      <span><b>A corpo libero</b><small>Il peso corporeo conta nel volume. I kg che inserisci in palestra diventano la zavorra aggiunta.</small></span></label>
     <button class="btn primary wide" data-a="save">Salva</button>
     ${ex.builtin || isNew ? '' : '<button class="btn text-danger wide" data-a="del">Elimina esercizio</button>'}`, (d, close) => {
     const preview = d.querySelector('[data-preview]');
@@ -68,6 +70,8 @@ function editor(original, isNew, onDone) {
       save: async () => {
         ex.name = d.querySelector('[data-name]').value.trim();
         ex.muscle = d.querySelector('[data-muscle]').value;
+        // Mantiene la quota del catalogo (per esempio 0,65 nei piegamenti).
+        ex.bw = d.querySelector('[data-bw]').checked ? (ex.bw > 0 ? ex.bw : 1) : 0;
         if (!ex.name) { toast('Inserisci un nome'); return; }
         await db.put('exercises', ex);
         close();

@@ -1,9 +1,10 @@
 // Allenamento dal vivo: ogni modifica viene salvata subito.
 import * as db from './db.js';
 import { actions, clock, confirmBox, esc, inputNum, num, parseNum, pickExercise, setText, thumb, toast, uid } from './ui.js';
-import { workoutStats } from './stats.js';
+import { bwFactor, progressionHint, workoutStats } from './stats.js';
 
 const go = (h) => { location.hash = h; };
+export const REST_DEFAULT = 90;
 
 function lastPerformance(exerciseId, dayId, workouts) {
   const sorted = [...workouts].sort((a, b) => b.startedAt - a.startedAt);
@@ -27,8 +28,8 @@ function prefilledSets(base, last, mode) {
 
 function entry(ex, base, last, mode) {
   return {
-    exerciseId: ex.id, name: ex.name, muscle: ex.muscle,
-    base, last, plannedSets: base.length,
+    exerciseId: ex.id, name: ex.name, muscle: ex.muscle, bw: bwFactor(ex),
+    base, last, plannedSets: base.length, hint: progressionHint(base, last),
     sets: prefilledSets(base, last, mode), note: '',
   };
 }
@@ -46,11 +47,53 @@ export async function startWorkout(planId, dayId) {
   });
 }
 
+// Il suggerimento resta visibile finché i valori inseriti non lo raggiungono.
+function hintPending(e) {
+  if (!e.hint || e.hintDone) return false;
+  const open = e.sets.filter((s) => !s.done);
+  if (!open.length) return false;
+  if (e.hint.kg) return open.some((s) => (s.kg || 0) < e.hint.kg);
+  return true;
+}
+
+function hintText(e) {
+  return e.hint.kg
+    ? `Prova <b>${num(e.hint.kg, 2)} kg</b>: l'ultima volta hai fatto tutte le ripetizioni previste.`
+    : 'Prova <b>1 ripetizione in più</b>: l\'ultima volta hai fatto tutte le ripetizioni previste.';
+}
+
+// Segnale sonoro breve a fine recupero (la vibrazione non c'è su iPhone).
+let audio;
+function unlockAudio() {
+  try {
+    audio ||= new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state === 'suspended') audio.resume();
+  } catch { /* nessun audio disponibile */ }
+}
+function beep() {
+  navigator.vibrate?.([250, 120, 250]);
+  if (!audio) return;
+  try {
+    for (const at of [0, 0.3]) {
+      const o = audio.createOscillator();
+      const g = audio.createGain();
+      o.frequency.value = 880;
+      g.gain.setValueAtTime(0.25, audio.currentTime + at);
+      g.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + at + 0.22);
+      o.connect(g).connect(audio.destination);
+      o.start(audio.currentTime + at);
+      o.stop(audio.currentTime + at + 0.24);
+    }
+  } catch { /* ignora */ }
+}
+
 export async function workoutView(main, onLeave) {
   const w = await db.getMeta('active');
   if (!w) { go('#/'); return; }
-  const library = await db.all('exercises');
+  const [library, settings] = await Promise.all([db.all('exercises'), db.getMeta('settings', {})]);
   const lib = new Map(library.map((e) => [e.id, e]));
+  const restOn = settings.restOn !== false;
+  const restSec = settings.restSec || REST_DEFAULT;
   const save = () => db.setMeta('active', w);
 
   const summaryLine = () => {
@@ -60,7 +103,7 @@ export async function workoutView(main, onLeave) {
   };
   const paintSummary = () => { main.querySelector('[data-summary]').textContent = summaryLine(); };
 
-  const history = (label, sets) => (sets?.length ? `<small><b>${label}</b> ${sets.map((s) => esc(setText(s))).join(' · ')}</small>` : '');
+  const history = (label, sets, bw) => (sets?.length ? `<small><b>${label}</b> ${sets.map((s) => esc(setText(s, bw))).join(' · ')}</small>` : '');
 
   const setRow = (s, j) => `
     <div class="set ${s.done ? 'done' : ''}" data-s="${j}">
@@ -81,10 +124,12 @@ export async function workoutView(main, onLeave) {
         <section class="card" data-e="${i}">
           <div class="ex-head">${thumb(lib.get(e.exerciseId))}
             <div class="grow"><h2>${esc(e.name)}</h2>
-              <div class="past">${history('Base', e.base)}${history('Ultima', e.last)}</div></div>
+              <div class="past">${history('Base', e.base, e.bw)}${history('Ultima', e.last, e.bw)}</div></div>
             <button class="icon-btn sm" data-a="exDel" aria-label="Rimuovi dall'allenamento">✕</button>
           </div>
-          <div class="sets-head"><span>Serie</span><span>Kg</span><span>Rip</span><span>Fatta</span></div>
+          ${!w.editingId && hintPending(e) ? `<div class="suggest"><span>↑ ${hintText(e)}</span>
+            <div class="row"><button class="btn primary sm" data-a="hintApply">Applica</button><button class="btn ghost sm" data-a="hintSkip">No, grazie</button></div></div>` : ''}
+          <div class="sets-head"><span>Serie</span><span>${e.bw ? '+Kg' : 'Kg'}</span><span>Rip</span><span>Fatta</span></div>
           ${e.sets.map(setRow).join('')}
           <div class="row">
             <button class="btn ghost sm grow" data-a="setAdd">+ Serie</button>
@@ -99,12 +144,53 @@ export async function workoutView(main, onLeave) {
     tick();
   }
 
+  // Barra del recupero, fissa sopra il menu in basso.
+  const bar = document.createElement('div');
+  bar.id = 'rest';
+  bar.hidden = true;
+  bar.innerHTML = `<div class="rest-time"><small>Recupero</small><b data-left></b></div>
+    <button class="btn ghost sm" data-r="-15">−15 s</button>
+    <button class="btn ghost sm" data-r="15">+15 s</button>
+    <button class="btn primary sm" data-r="skip">Fine</button>`;
+  document.body.append(bar);
+  onLeave(() => bar.remove());
+  let doneShownUntil = 0;
+  bar.onclick = (e) => {
+    const b = e.target.closest('[data-r]');
+    if (!b || !w.restEndsAt) return;
+    if (b.dataset.r === 'skip') w.restEndsAt = null;
+    else w.restEndsAt = Math.max(Date.now() + 1000, w.restEndsAt + Number(b.dataset.r) * 1000);
+    save();
+    paintRest();
+  };
+  function paintRest() {
+    const now = Date.now();
+    if (w.restEndsAt && now >= w.restEndsAt) {
+      if (now - w.restEndsAt < 5000) beep();
+      w.restEndsAt = null;
+      save();
+      doneShownUntil = now + 4000;
+    }
+    if (w.restEndsAt) {
+      bar.hidden = false;
+      bar.classList.remove('over');
+      bar.querySelector('[data-left]').textContent = clock(w.restEndsAt - now + 999);
+    } else if (now < doneShownUntil) {
+      bar.hidden = false;
+      bar.classList.add('over');
+      bar.querySelector('[data-left]').textContent = 'Recupero finito';
+    } else {
+      bar.hidden = true;
+    }
+  }
+
   const clockFixed = w.editingId ? w.endedAt - w.startedAt : null;
   function tick() {
     const el = main.querySelector('[data-clock]');
     if (el) el.textContent = clock(clockFixed ?? Date.now() - w.startedAt);
+    paintRest();
   }
-  const timer = setInterval(tick, 1000);
+  const timer = setInterval(tick, 500);
   onLeave(() => clearInterval(timer));
 
   const exOf = (t) => w.exercises[Number(t.closest('[data-e]').dataset.e)];
@@ -134,7 +220,7 @@ export async function workoutView(main, onLeave) {
       return;
     }
     if (done < total && !await confirmBox(`${total - done} serie non spuntate non verranno salvate. Terminare?`, { ok: 'Termina' })) return;
-    const { editingId, ...record } = w;
+    const { editingId, restEndsAt, ...record } = w;
     record.id = editingId || w.id;
     record.endedAt = editingId ? w.endedAt : Date.now();
     record.exercises = w.exercises.map((e) => ({ ...e, sets: e.sets.filter((s) => s.done) }));
@@ -146,15 +232,33 @@ export async function workoutView(main, onLeave) {
   actions(main, {
     tick: (t) => {
       const row = t.closest('[data-s]');
-      const s = exOf(t).sets[Number(row.dataset.s)];
+      const e = exOf(t);
+      const s = e.sets[Number(row.dataset.s)];
       if (!s.done && !s.reps) { toast('Inserisci le ripetizioni'); return; }
       s.done = !s.done;
-      if (s.done) { s.kg ??= 0; s.doneAt ||= Date.now(); } else delete s.doneAt;
+      if (s.done) {
+        s.kg ??= 0;
+        s.doneAt ||= Date.now();
+        if (restOn && !w.editingId) { unlockAudio(); w.restEndsAt = Date.now() + restSec * 1000; }
+      } else delete s.doneAt;
       row.classList.toggle('done', s.done);
       t.setAttribute('aria-pressed', s.done);
       save();
       paintSummary();
+      paintRest();
+      if (e.hint && !hintPending(e)) main.querySelector(`[data-e="${w.exercises.indexOf(e)}"] .suggest`)?.remove();
     },
+    hintApply: async (t) => {
+      const e = exOf(t);
+      for (const s of e.sets.filter((x) => !x.done)) {
+        if (e.hint.kg) s.kg = e.hint.kg;
+        else s.reps = (s.reps || 0) + e.hint.reps;
+      }
+      e.hintDone = true;
+      await save();
+      draw();
+    },
+    hintSkip: async (t) => { exOf(t).hintDone = true; await save(); draw(); },
     setAdd: async (t) => {
       const e = exOf(t);
       const prev = e.sets[e.sets.length - 1];
@@ -183,7 +287,7 @@ export async function workoutView(main, onLeave) {
       const workouts = await db.all('workouts');
       const last = lastPerformance(picked.id, w.dayId, workouts);
       const base = last || [{ kg: 0, reps: 10 }];
-      w.exercises.push({ ...entry(picked, base, last, 'last'), base: [], plannedSets: 0 });
+      w.exercises.push({ ...entry(picked, base, last, 'last'), base: [], plannedSets: 0, hint: null });
       await save();
       draw();
     },

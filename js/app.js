@@ -8,6 +8,7 @@ import { historyView, workoutDetailView } from './history.js';
 import { progressView } from './progress.js';
 import { dataView } from './data.js';
 import { guideView } from './guide.js';
+import { setBodyweights } from './stats.js';
 
 const main = document.getElementById('main');
 const nav = document.getElementById('nav');
@@ -37,6 +38,7 @@ async function route() {
   const tab = found ? found.tab : '#/';
   nav.querySelectorAll('a').forEach((a) => a.classList.toggle('on', a.getAttribute('href') === tab));
   try {
+    setBodyweights(await db.all('body'));
     await view(main, ...(found ? found.m.slice(1) : []));
     if (mine === ticket) window.scrollTo(0, 0);
   } catch (e) {
@@ -46,9 +48,18 @@ async function route() {
 }
 
 async function seed() {
-  if (await db.getMeta('seeded')) return;
-  for (const e of CATALOG) await db.put('exercises', e);
-  await db.setMeta('seeded', true);
+  if (!await db.getMeta('seeded')) {
+    for (const e of CATALOG) await db.put('exercises', e);
+    await db.setMeta('seeded', true);
+    return;
+  }
+  // Esercizi già salvati con una versione precedente: aggiunge le informazioni nuove
+  // del catalogo senza toccare nome, muscolo o foto scelti da te.
+  const saved = new Map((await db.all('exercises')).map((e) => [e.id, e]));
+  for (const c of CATALOG) {
+    const e = saved.get(c.id);
+    if (e && e.bw === undefined) await db.put('exercises', { ...e, bw: c.bw });
+  }
 }
 
 async function registerWorker() {

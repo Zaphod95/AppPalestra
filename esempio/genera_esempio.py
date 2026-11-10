@@ -12,8 +12,8 @@ ROOT = Path(__file__).resolve().parent.parent
 random.seed(7)
 
 catalog = [
-    {"id": f"c-{i}", "name": n, "muscle": m, "pose": p, "builtin": True}
-    for i, n, m, p in re.findall(r"row\('([^']+)', '([^']+)', '([^']+)', '([^']+)'\)", (ROOT / "js/catalog.js").read_text(encoding="utf-8"))
+    {"id": f"c-{i}", "name": n, "muscle": m, "pose": p, "bw": float(bw or 0), "builtin": True}
+    for i, n, m, p, bw in re.findall(r"row\('([^']+)', '([^']+)', '([^']+)', '([^']+)'(?:, ([\d.]+))?\)", (ROOT / "js/catalog.js").read_text(encoding="utf-8"))
 ]
 by_id = {e["id"]: e for e in catalog}
 
@@ -49,6 +49,7 @@ ms = lambda d: int(d.timestamp() * 1000)
 
 workouts = []
 load = {ex: kg for _, _, exs in DAYS for ex, _, _, kg, _ in exs}
+load.update({"c-hip-thrust": 60, "c-curl-martello": 12})
 bw_reps = {ex: reps - 2 for _, _, exs in DAYS for ex, _, reps, kg, _ in exs if not kg}
 last = {}
 day = datetime(2026, 9, 14)
@@ -61,7 +62,12 @@ while day <= end:
         t = day.replace(hour=18, minute=random.randint(0, 40))
         start = t
         entries = []
-        for ex, n, reps, kg0, step in exs:
+        extra = []
+        if did == "d-c" and day < datetime(2026, 10, 1):
+            extra = [("c-hip-thrust", 3, 10, 60, 5)]
+        if did == "d-b" and datetime(2026, 10, 5) <= day < datetime(2026, 10, 27):
+            extra = [("c-curl-martello", 3, 12, 12, 1)]
+        for ex, n, reps, kg0, step in exs + extra:
             t += timedelta(minutes=random.randint(2, 4))
             sets = []
             for i in range(n):
@@ -79,7 +85,7 @@ while day <= end:
             elif not kg0 and random.random() < 0.35:
                 bw_reps[ex] += 1
             entries.append({
-                "exerciseId": ex, "name": by_id[ex]["name"], "muscle": by_id[ex]["muscle"],
+                "exerciseId": ex, "name": by_id[ex]["name"], "muscle": by_id[ex]["muscle"], "bw": by_id[ex]["bw"],
                 "base": [{"kg": kg0 or None, "reps": reps} for _ in range(n)], "last": last.get(ex),
                 "plannedSets": n, "sets": sets, "note": random.choice(NOTES) if random.random() < 0.1 else "",
             })
@@ -90,9 +96,18 @@ while day <= end:
         })
     day += timedelta(days=1)
 
+# Una pesata a settimana, in lieve calo.
+body = []
+kg_body = 79.4
+d = datetime(2026, 9, 14, 8)
+while d <= end:
+    body.append({"id": f"b-{d:%Y%m%d}", "t": ms(d), "kg": round(kg_body, 1)})
+    kg_body += random.uniform(-0.6, 0.2)
+    d += timedelta(days=7)
+
 out = ROOT / "esempio/palestra-esempio.json"
 out.write_text(json.dumps({
-    "app": "AppPalestra", "version": 1, "exportedAt": datetime.now().isoformat(),
-    "exercises": catalog, "plans": [plan], "workouts": workouts, "settings": {"prefill": "last"},
+    "app": "AppPalestra", "version": 2, "exportedAt": datetime.now().isoformat(),
+    "exercises": catalog, "plans": [plan], "workouts": workouts, "body": body, "settings": {"prefill": "last"},
 }, ensure_ascii=False), encoding="utf-8")
-print(f"{len(workouts)} allenamenti, {len(catalog)} esercizi -> {out}")
+print(f"{len(workouts)} allenamenti, {len(body)} pesate, {len(catalog)} esercizi -> {out}")

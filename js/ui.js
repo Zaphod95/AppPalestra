@@ -29,7 +29,11 @@ export function clock(ms) {
   return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
 }
 
-export const setText = (s) => (s.kg > 0 ? `${num(s.kg, 2)}×${s.reps ?? '–'}` : `${s.reps ?? '–'} rip`);
+// Negli esercizi a corpo libero i kg sono la zavorra aggiunta, mostrata con il +.
+export const setText = (s, bodyweight = false) => {
+  if (!(s.kg > 0)) return `${s.reps ?? '–'} rip`;
+  return `${bodyweight ? '+' : ''}${num(s.kg, 2)}×${s.reps ?? '–'}`;
+};
 
 export function summarizeSets(sets) {
   if (!sets.length) return 'Nessuna serie';

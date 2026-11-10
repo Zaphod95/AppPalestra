@@ -1,5 +1,32 @@
-// Calcoli puri sulle statistiche: nessun accesso a DOM o archivio.
+// Calcoli sulle statistiche: nessun accesso a DOM o archivio.
+import { CATALOG } from './catalog.js';
+
 const MAX_REST_MS = 15 * 60 * 1000;
+const CATALOG_BW = new Map(CATALOG.filter((c) => c.bw).map((c) => [c.id, c.bw]));
+
+// Pesate del corpo, impostate da app.js prima di ogni schermata.
+let weights = [];
+export function setBodyweights(list) {
+  weights = [...list].sort((a, b) => a.t - b.t);
+}
+
+// Peso dell'ultima pesata prima di t; prima della prima pesata vale la prima.
+export function bodyweightAt(t) {
+  if (!weights.length) return 0;
+  let kg = weights[0].kg;
+  for (const w of weights) {
+    if (w.t > t) break;
+    kg = w.kg;
+  }
+  return kg;
+}
+
+// Quota del peso corporeo che conta come carico per questo esercizio.
+export const bwFactor = (ex) => ex?.bw ?? CATALOG_BW.get(ex?.exerciseId ?? ex?.id) ?? 0;
+export const isBodyweight = (ex) => bwFactor(ex) > 0;
+
+// Carico effettivo di una serie: kg inseriti più l'eventuale peso corporeo.
+export const setLoad = (ex, s, t) => s.kg + bwFactor(ex) * bodyweightAt(t);
 
 export const doneSets = (ex) => ex.sets.filter((s) => s.done);
 
@@ -9,20 +36,19 @@ export function e1rm(kg, reps) {
   return reps === 1 ? kg : kg * (1 + reps / 30);
 }
 
-export function exerciseStats(ex) {
+export function exerciseStats(ex, t = Date.now()) {
   const sets = doneSets(ex);
-  let volume = 0, reps = 0, topKg = 0, best = 0, bestSet = null, maxReps = 0;
+  let volume = 0, reps = 0, topKg = 0, best = -1, bestSet = null, maxReps = 0;
   for (const s of sets) {
-    volume += s.kg * s.reps;
+    const load = setLoad(ex, s, t);
+    volume += load * s.reps;
     reps += s.reps;
-    topKg = Math.max(topKg, s.kg);
+    topKg = Math.max(topKg, load);
     maxReps = Math.max(maxReps, s.reps);
-    const score = e1rm(s.kg, s.reps);
-    const cur = bestSet ? e1rm(bestSet.kg, bestSet.reps) : -1;
-    if (score > cur || (score === cur && s.reps > bestSet.reps)) bestSet = s;
-    best = Math.max(best, score);
+    const score = e1rm(load, s.reps);
+    if (score > best || (score === best && s.reps > bestSet.reps)) { best = score; bestSet = s; }
   }
-  return { sets: sets.length, reps, volume, topKg, maxReps, e1rm: best, bestSet };
+  return { sets: sets.length, reps, volume, topKg, maxReps, e1rm: Math.max(0, best), bestSet };
 }
 
 export function workoutStats(w) {
@@ -30,7 +56,7 @@ export function workoutStats(w) {
   let restTotal = 0, restCount = 0;
   const muscles = {};
   for (const ex of w.exercises) {
-    const s = exerciseStats(ex);
+    const s = exerciseStats(ex, w.startedAt);
     sets += s.sets;
     reps += s.reps;
     volume += s.volume;
@@ -63,11 +89,12 @@ export function previousWorkout(w, all) {
     .pop() || null;
 }
 
+// Ultima volta che l'esercizio è stato fatto prima di questo allenamento.
 export function previousExercise(w, exerciseId, all) {
   const earlier = all.filter((x) => x.id !== w.id && x.startedAt < w.startedAt).sort(byDate).reverse();
   for (const x of earlier) {
     const e = x.exercises.find((y) => y.exerciseId === exerciseId && doneSets(y).length);
-    if (e) return e;
+    if (e) return { ex: e, t: x.startedAt };
   }
   return null;
 }
@@ -77,9 +104,11 @@ export function personalRecords(w, all) {
   const earlier = all.filter((x) => x.id !== w.id && x.startedAt < w.startedAt);
   const out = [];
   for (const ex of w.exercises) {
-    const cur = exerciseStats(ex);
+    const cur = exerciseStats(ex, w.startedAt);
     if (!cur.sets) continue;
-    const past = earlier.flatMap((x) => x.exercises.filter((y) => y.exerciseId === ex.exerciseId && doneSets(y).length)).map(exerciseStats);
+    const past = earlier.flatMap((x) => x.exercises
+      .filter((y) => y.exerciseId === ex.exerciseId && doneSets(y).length)
+      .map((y) => exerciseStats(y, x.startedAt)));
     if (!past.length) continue;
     const beat = (key) => cur[key] > Math.max(...past.map((p) => p[key]));
     const types = [];
@@ -100,10 +129,21 @@ export function exerciseHistory(exerciseId, all) {
   for (const w of [...all].sort(byDate)) {
     for (const ex of w.exercises) {
       if (ex.exerciseId !== exerciseId || !doneSets(ex).length) continue;
-      rows.push({ t: w.startedAt, workoutId: w.id, ...exerciseStats(ex), setList: doneSets(ex) });
+      rows.push({ t: w.startedAt, workoutId: w.id, ...exerciseStats(ex, w.startedAt), setList: doneSets(ex), bw: isBodyweight(ex) });
     }
   }
   return rows;
+}
+
+// Proposta per la prossima volta: se l'ultima volta sono state fatte tutte
+// le ripetizioni previste, si aumenta il carico (o una ripetizione).
+export function progressionHint(base, last) {
+  if (!base?.length || !last || last.length < base.length) return null;
+  if (base.some((b, i) => !b.reps || last[i].reps < b.reps)) return null;
+  const top = Math.max(...last.map((s) => s.kg || 0));
+  if (top <= 0) return { reps: 1 };
+  const step = top < 20 ? 1 : Math.max(2.5, Math.round((top * 0.05) / 2.5) * 2.5);
+  return { kg: Math.round((top + step) * 100) / 100 };
 }
 
 export function weekStart(t) {

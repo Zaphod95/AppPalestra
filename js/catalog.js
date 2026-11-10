@@ -49,17 +49,18 @@ export function figure(pose) {
 
 export const MUSCLES = ['Petto', 'Schiena', 'Spalle', 'Bicipiti', 'Tricipiti', 'Gambe', 'Glutei', 'Polpacci', 'Addome', 'Altro'];
 
-const row = (id, name, muscle, pose) => ({ id: `c-${id}`, name, muscle, pose, builtin: true });
+// bw: quota del peso corporeo che conta come carico (1 = tutto il corpo).
+const row = (id, name, muscle, pose, bw = 0) => ({ id: `c-${id}`, name, muscle, pose, bw, builtin: true });
 
 export const CATALOG = [
   row('panca-piana', 'Panca piana con bilanciere', 'Petto', 'bench'),
   row('panca-inclinata', 'Panca inclinata con manubri', 'Petto', 'incline'),
   row('croci', 'Croci con manubri', 'Petto', 'fly'),
   row('chest-press', 'Chest press', 'Petto', 'chestpress'),
-  row('piegamenti', 'Piegamenti', 'Petto', 'pushup'),
-  row('dip', 'Dip alle parallele', 'Petto', 'dip'),
+  row('piegamenti', 'Piegamenti', 'Petto', 'pushup', 0.65),
+  row('dip', 'Dip alle parallele', 'Petto', 'dip', 1),
   row('lat-machine', 'Lat machine', 'Schiena', 'latpull'),
-  row('trazioni', 'Trazioni alla sbarra', 'Schiena', 'pullup'),
+  row('trazioni', 'Trazioni alla sbarra', 'Schiena', 'pullup', 1),
   row('rematore', 'Rematore con bilanciere', 'Schiena', 'row'),
   row('pulley', 'Pulley basso', 'Schiena', 'seatedrow'),
   row('stacco', 'Stacco da terra', 'Schiena', 'deadlift'),

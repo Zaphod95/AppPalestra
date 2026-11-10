@@ -2,19 +2,28 @@
 import * as db from './db.js';
 import { actions, confirmBox, dateShort, esc, inputNum, modal, parseNum, pickExercise, summarizeSets, thumb, toast, uid } from './ui.js';
 import { startWorkout } from './workout.js';
+import { BACKUP_EVERY_DAYS } from './data.js';
 
 const go = (h) => { location.hash = h; };
 const newDay = (n) => ({ id: uid(), name: `Giorno ${String.fromCharCode(64 + n)}`, exercises: [] });
 
 export async function plansView(main) {
-  const [plans, workouts, active] = await Promise.all([db.all('plans'), db.all('workouts'), db.getMeta('active')]);
+  const [plans, workouts, active, lastBackup] = await Promise.all([db.all('plans'), db.all('workouts'), db.getMeta('active'), db.getMeta('lastBackup', null)]);
   plans.sort((a, b) => a.createdAt - b.createdAt);
   const lastByDay = {};
   for (const w of workouts) lastByDay[w.dayId] = Math.max(lastByDay[w.dayId] || 0, w.startedAt);
 
+  // Promemoria: ci sono allenamenti non ancora salvati in un backup da troppo tempo.
+  const newest = Math.max(0, ...workouts.map((w) => w.endedAt || w.startedAt));
+  const oldest = Math.min(Date.now(), ...workouts.map((w) => w.startedAt));
+  const since = lastBackup || oldest;
+  const days = Math.floor((Date.now() - since) / 864e5);
+  const remind = workouts.length && newest > (lastBackup || 0) && days >= BACKUP_EVERY_DAYS;
+
   main.innerHTML = `
-    <header class="top"><h1>Le tue schede</h1><a class="icon-btn" href="#/dati" aria-label="Dati e backup">${GEAR}</a></header>
-    ${active ? `<a class="banner" href="#/allenamento"><b>${active.editingId ? 'Modifica in corso' : 'Allenamento in corso'}</b><span>${esc(active.planName)} · ${esc(active.dayName)}</span><em>Riprendi →</em></a>` : ''}
+    <header class="top"><h1>Le tue schede</h1><a class="icon-btn" href="#/dati" aria-label="Dati e impostazioni">${GEAR}</a></header>
+    ${remind ? `<a class="banner warn" href="#/dati"><b>${lastBackup ? `Ultimo backup ${days} giorni fa` : 'Non hai ancora un backup'}</b><span>I dati sono solo su questo telefono. Salvane una copia.</span><em>Backup →</em></a>` : ''}
+    ${active ?`<a class="banner" href="#/allenamento"><b>${active.editingId ? 'Modifica in corso' : 'Allenamento in corso'}</b><span>${esc(active.planName)} · ${esc(active.dayName)}</span><em>Riprendi →</em></a>` : ''}
     ${plans.length ? plans.map((p) => `
       <section class="card">
         <div class="card-head"><h2>${esc(p.name)}</h2><a class="link" href="#/scheda/${esc(p.id)}">Modifica</a></div>
