@@ -19,7 +19,7 @@ const TERMS = [
   ['Confronti e record', [
     ['Frecce e percentuali', 'Il confronto con la volta precedente. Per l\'allenamento intero è l\'ultima volta che hai fatto lo stesso giorno della scheda, per un esercizio l\'ultima volta che l\'hai fatto. ▲ verde vuol dire che sei migliorato, ▼ rosso che sei calato. La durata è in grigio, perché metterci di più o di meno non è né un bene né un male.'],
     ['Nuovi record', 'Compaiono quando superi il tuo valore migliore di sempre su un esercizio: carico max, 1RM stimato o volume. Negli esercizi a corpo libero contano le ripetizioni in una serie. La prima volta che fai un esercizio non c\'è ancora nulla da battere.'],
-    ['Serie per muscolo', 'Quante serie hai fatto per ogni gruppo muscolare. Mostra come distribuisci il lavoro e se trascuri qualche muscolo.'],
+    ['Serie per muscolo', 'Quante serie hai fatto per ogni gruppo muscolare. Mostra come distribuisci il lavoro e se trascuri qualche muscolo. Se un esercizio ha anche un muscolo secondario (per esempio i tricipiti nel dip), lì conta mezza serie.'],
     ['Non in scheda', 'Nel menu dei progressi indica gli esercizi che hai fatto almeno una volta ma che oggi non sono in nessuna scheda.'],
   ]],
   ['Durante l\'allenamento', [

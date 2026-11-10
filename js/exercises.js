@@ -1,7 +1,7 @@
 // Libreria esercizi: nome, gruppo muscolare e immagine.
 import * as db from './db.js';
 import { MUSCLES } from './catalog.js';
-import { actions, confirmBox, esc, modal, photoToThumb, thumb, toast, uid } from './ui.js';
+import { actions, confirmBox, esc, modal, muscleLabel, photoToThumb, thumb, toast, uid } from './ui.js';
 
 export async function exercisesView(main) {
   let list = await db.all('exercises');
@@ -10,13 +10,13 @@ export async function exercisesView(main) {
   const results = () => {
     const q = query.trim().toLowerCase();
     return list
-      .filter((x) => x.name.toLowerCase().includes(q) || (x.muscle || '').toLowerCase().includes(q))
+      .filter((x) => `${x.name} ${x.muscle || ''} ${x.muscle2 || ''}`.toLowerCase().includes(q))
       .sort((a, b) => a.name.localeCompare(b.name, 'it'));
   };
   const drawList = () => {
     main.querySelector('[data-list]').innerHTML = results().map((x) => `
       <button class="item" data-a="edit" data-id="${esc(x.id)}">${thumb(x)}
-        <span class="grow"><b>${esc(x.name)}</b><small>${esc(x.muscle)}${x.photo ? ' · foto tua' : ''}</small></span></button>`).join('') || '<p class="hint center">Nessun esercizio trovato.</p>';
+        <span class="grow"><b>${esc(x.name)}</b><small>${esc(muscleLabel(x))}${x.photo ? ' · foto tua' : ''}</small></span></button>`).join('') || '<p class="hint center">Nessun esercizio trovato.</p>';
   };
 
   main.innerHTML = `
@@ -46,10 +46,12 @@ function editor(original, isNew, onDone) {
     <input class="field" data-name value="${esc(ex.name)}" autocomplete="off">
     <label class="label">Gruppo muscolare</label>
     <select class="field" data-muscle>${MUSCLES.map((m) => `<option ${m === ex.muscle ? 'selected' : ''}>${m}</option>`).join('')}</select>
+    <label class="label">Muscolo secondario (facoltativo)</label>
+    <select class="field" data-muscle2><option value="">Nessuno</option>${MUSCLES.map((m) => `<option ${m === ex.muscle2 ? 'selected' : ''}>${m}</option>`).join('')}</select>
     <label class="radio"><input type="checkbox" data-bw ${ex.bw > 0 ? 'checked' : ''}>
       <span><b>A corpo libero</b><small>Il peso corporeo conta nel volume. I kg che inserisci in palestra diventano la zavorra aggiunta.</small></span></label>
     <button class="btn primary wide" data-a="save">Salva</button>
-    ${ex.builtin || isNew ? '' : '<button class="btn text-danger wide" data-a="del">Elimina esercizio</button>'}`, (d, close) => {
+    ${isNew ? '' : '<button class="btn text-danger wide" data-a="del">Elimina esercizio</button>'}`, (d, close) => {
     const preview = d.querySelector('[data-preview]');
     const clearBtn = d.querySelector('[data-a=clear]');
     const paint = () => { preview.innerHTML = thumb(ex, 'lg'); clearBtn.hidden = !ex.photo; };
@@ -70,6 +72,8 @@ function editor(original, isNew, onDone) {
       save: async () => {
         ex.name = d.querySelector('[data-name]').value.trim();
         ex.muscle = d.querySelector('[data-muscle]').value;
+        ex.muscle2 = d.querySelector('[data-muscle2]').value;
+        if (ex.muscle2 === ex.muscle) ex.muscle2 = '';
         // Mantiene la quota del catalogo (per esempio 0,65 nei piegamenti).
         ex.bw = d.querySelector('[data-bw]').checked ? (ex.bw > 0 ? ex.bw : 1) : 0;
         if (!ex.name) { toast('Inserisci un nome'); return; }

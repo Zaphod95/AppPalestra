@@ -42,6 +42,8 @@ export function summarizeSets(sets) {
   return `${sets.length} serie · ${sets.map(setText).join(' / ')}`;
 }
 
+export const muscleLabel = (ex) => [ex?.muscle, ex?.muscle2].filter(Boolean).join(' · ');
+
 export function thumb(ex, size = '') {
   const inner = ex?.photo ? `<img src="${esc(ex.photo)}" alt="">` : figure(ex?.pose);
   return `<span class="thumb ${size}">${inner}</span>`;
@@ -99,8 +101,8 @@ export function pickExercise(exercises) {
       const search = d.querySelector('[data-search]');
       const draw = () => {
         const q = search.value.trim().toLowerCase();
-        const rows = sorted.filter((x) => x.name.toLowerCase().includes(q) || (x.muscle || '').toLowerCase().includes(q));
-        list.innerHTML = rows.map((x) => `<button class="item" data-a="pick" data-id="${esc(x.id)}">${thumb(x, 'sm')}<span class="grow"><b>${esc(x.name)}</b><small>${esc(x.muscle)}</small></span></button>`).join('')
+        const rows = sorted.filter((x) => `${x.name} ${x.muscle || ''} ${x.muscle2 || ''}`.toLowerCase().includes(q));
+        list.innerHTML = rows.map((x) => `<button class="item" data-a="pick" data-id="${esc(x.id)}">${thumb(x, 'sm')}<span class="grow"><b>${esc(x.name)}</b><small>${esc(muscleLabel(x))}</small></span></button>`).join('')
           + (q && !rows.some((x) => x.name.toLowerCase() === q) ? `<button class="item" data-a="create">${thumb(null, 'sm')}<span class="grow"><b>Crea “${esc(search.value.trim())}”</b><small>Nuovo esercizio</small></span></button>` : '');
       };
       search.oninput = draw;

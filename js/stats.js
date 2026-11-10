@@ -3,6 +3,10 @@ import { CATALOG } from './catalog.js';
 
 const MAX_REST_MS = 15 * 60 * 1000;
 const CATALOG_BW = new Map(CATALOG.filter((c) => c.bw).map((c) => [c.id, c.bw]));
+const CATALOG_M2 = new Map(CATALOG.filter((c) => c.muscle2).map((c) => [c.id, c.muscle2]));
+
+// Muscolo secondario; per allenamenti salvati prima di questa informazione usa il catalogo.
+export const secondaryMuscle = (ex) => ex?.muscle2 ?? CATALOG_M2.get(ex?.exerciseId ?? ex?.id) ?? '';
 
 // Pesate del corpo, impostate da app.js prima di ogni schermata.
 let weights = [];
@@ -61,7 +65,12 @@ export function workoutStats(w) {
     reps += s.reps;
     volume += s.volume;
     planned += ex.plannedSets || 0;
-    if (s.sets) muscles[ex.muscle || 'Altro'] = (muscles[ex.muscle || 'Altro'] || 0) + s.sets;
+    if (s.sets) {
+      const main = ex.muscle || 'Altro';
+      muscles[main] = (muscles[main] || 0) + s.sets;
+      const second = secondaryMuscle(ex);
+      if (second && second !== main) muscles[second] = (muscles[second] || 0) + s.sets / 2;
+    }
     const times = doneSets(ex).map((x) => x.doneAt).filter(Boolean).sort((a, b) => a - b);
     for (let i = 1; i < times.length; i++) {
       const gap = times[i] - times[i - 1];

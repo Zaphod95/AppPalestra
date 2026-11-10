@@ -118,5 +118,5 @@ export function barChart(el, { bars, format }) {
 export function hbars(rows, unit) {
   const max = Math.max(...rows.map((r) => r[1]), 1);
   return `<div class="hbars">${rows.map(([name, v]) => `
-    <div class="hbar"><span class="hname">${name}</span><span class="htrack"><i style="width:${(v / max) * 100}%"></i></span><span class="hval">${v} ${unit}</span></div>`).join('')}</div>`;
+    <div class="hbar"><span class="hname">${name}</span><span class="htrack"><i style="width:${(v / max) * 100}%"></i></span><span class="hval">${v.toLocaleString('it-IT', { maximumFractionDigits: 1 })} ${unit}</span></div>`).join('')}</div>`;
 }

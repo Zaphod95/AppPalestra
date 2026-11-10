@@ -51,15 +51,24 @@ async function seed() {
   if (!await db.getMeta('seeded')) {
     for (const e of CATALOG) await db.put('exercises', e);
     await db.setMeta('seeded', true);
+    await db.setMeta('catalogIds', CATALOG.map((c) => c.id));
     return;
   }
-  // Esercizi già salvati con una versione precedente: aggiunge le informazioni nuove
-  // del catalogo senza toccare nome, muscolo o foto scelti da te.
   const saved = new Map((await db.all('exercises')).map((e) => [e.id, e]));
+  // Esercizi del catalogo già proposti in passato: quelli che hai eliminato non tornano.
+  // Prima di questa informazione nessun esercizio del catalogo era eliminabile.
+  const known = new Set(await db.getMeta('catalogIds', null) ?? [...saved.keys()]);
   for (const c of CATALOG) {
     const e = saved.get(c.id);
-    if (e && e.bw === undefined) await db.put('exercises', { ...e, bw: c.bw });
+    if (!e && !known.has(c.id)) {
+      await db.put('exercises', c);
+    } else if (e && (e.bw === undefined || e.muscle2 === undefined)) {
+      // Informazioni nuove del catalogo, senza toccare nome, muscolo o foto scelti da te.
+      await db.put('exercises', { ...e, bw: e.bw ?? c.bw, muscle2: e.muscle2 ?? c.muscle2 });
+    }
+    known.add(c.id);
   }
+  await db.setMeta('catalogIds', [...known]);
 }
 
 async function registerWorker() {

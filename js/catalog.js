@@ -35,6 +35,12 @@ const POSES = {
   crunch: { b: ['76,86 62,64 44,84 26,68', '26,68 34,58'], h: [20, 58], g: ['8,90 92,90'] },
   plank: { b: ['12,84 44,74 70,68', '70,68 70,86 86,86'], h: [81, 63], g: ['4,90 96,90'] },
   legraise: { b: ['40,32 42,60 84,60', '40,32 38,8'], h: [50, 23], g: ['24,8 56,8'] },
+  inclinepress: { b: ['66,86 64,62 44,66 36,38', '37,40 52,34 64,22'], h: [33, 27], g: ['28,32 40,72', '38,70 60,70', '50,70 50,88'], d: [[66, 20, 4]] },
+  seatpress: { b: [SEAT, '44,38 54,30 52,10'], h: [44, 25], g: [...SEAT_G], d: [[52, 8, 4]] },
+  pecdeck: { b: ['50,36 50,64', '36,36 64,36', '36,36 20,40 22,20', '64,36 80,40 78,20', '38,88 38,68 50,64 62,68 62,88'], h: [50, 24], g: ['14,14 14,44', '86,14 86,44', '30,70 70,70'] },
+  cablefly: { b: ['50,28 50,52', '38,28 62,28', '38,28 34,44 46,54', '62,28 66,44 54,54', '42,90 42,70 50,52 58,70 58,90'], h: [50, 15], g: ['8,6 46,54', '92,6 54,54'], d: [[8, 6, 4], [92, 6, 4]] },
+  shrug: { b: ['50,26 50,52', '36,24 64,24', '36,24 34,54', '64,24 66,54', '42,90 42,70 50,52 58,70 58,90'], h: [50, 12], g: ['24,57 44,57', '56,57 76,57'], d: [[24, 57, 5], [76, 57, 5]] },
+  hacksquat: { b: ['76,84 64,62 46,66 34,38', '35,40 44,34'], h: [30, 27], g: ['26,34 40,72', '68,90 88,74'] },
   generic: { b: [], g: ['28,50 72,50'], d: [[24, 50, 12], [76, 50, 12], [14, 50, 8], [86, 50, 8]] },
 };
 
@@ -47,30 +53,43 @@ export function figure(pose) {
   return `<svg class="fig" viewBox="0 0 100 100" aria-hidden="true">${lines(p.g, 'fg')}${lines(p.b, 'fb')}${head}${discs}${bells}</svg>`;
 }
 
-export const MUSCLES = ['Petto', 'Schiena', 'Spalle', 'Bicipiti', 'Tricipiti', 'Gambe', 'Glutei', 'Polpacci', 'Addome', 'Altro'];
+export const MUSCLES = ['Petto', 'Schiena', 'Spalle', 'Trapezio', 'Bicipiti', 'Tricipiti', 'Gambe', 'Glutei', 'Polpacci', 'Addome', 'Altro'];
 
 // bw: quota del peso corporeo che conta come carico (1 = tutto il corpo).
-const row = (id, name, muscle, pose, bw = 0) => ({ id: `c-${id}`, name, muscle, pose, bw, builtin: true });
+// muscle2: muscolo secondario, che nelle statistiche conta mezza serie.
+const row = (id, name, muscle, pose, bw = 0, muscle2 = '') => ({ id: `c-${id}`, name, muscle, muscle2, pose, bw, builtin: true });
 
 export const CATALOG = [
   row('panca-piana', 'Panca piana con bilanciere', 'Petto', 'bench'),
   row('panca-inclinata', 'Panca inclinata con manubri', 'Petto', 'incline'),
   row('croci', 'Croci con manubri', 'Petto', 'fly'),
   row('chest-press', 'Chest press', 'Petto', 'chestpress'),
+  row('panca-inclinata-macchina', 'Panca inclinata con macchinario', 'Petto', 'inclinepress'),
+  row('vertical-chest-press', 'Vertical chest press', 'Petto', 'chestpress'),
+  row('incline-press', 'Incline press', 'Petto', 'inclinepress'),
+  row('croci-seduto', 'Croci seduto', 'Petto', 'pecdeck'),
+  row('croci-in-piedi', 'Croci in piedi ai cavi', 'Petto', 'cablefly'),
   row('piegamenti', 'Piegamenti', 'Petto', 'pushup', 0.65),
-  row('dip', 'Dip alle parallele', 'Petto', 'dip', 1),
+  row('dip', 'Dip alle parallele', 'Petto', 'dip', 1, 'Tricipiti'),
   row('lat-machine', 'Lat machine', 'Schiena', 'latpull'),
   row('trazioni', 'Trazioni alla sbarra', 'Schiena', 'pullup', 1),
+  row('diverging-lat-pull', 'Diverging lat pull (spalle macchinario)', 'Schiena', 'latpull'),
   row('rematore', 'Rematore con bilanciere', 'Schiena', 'row'),
   row('pulley', 'Pulley basso', 'Schiena', 'seatedrow'),
   row('stacco', 'Stacco da terra', 'Schiena', 'deadlift'),
   row('lento-avanti', 'Lento avanti', 'Spalle', 'ohp'),
   row('alzate-laterali', 'Alzate laterali', 'Spalle', 'lateral'),
+  row('lateral-raise', 'Lateral raise alla macchina', 'Spalle', 'lateral'),
+  row('converging-shoulder-press', 'Converging shoulder press', 'Spalle', 'seatpress'),
+  row('trapezio-macchina', 'Trapezio alla macchina', 'Trapezio', 'shrug'),
   row('curl-bilanciere', 'Curl con bilanciere', 'Bicipiti', 'curl'),
   row('curl-martello', 'Curl a martello', 'Bicipiti', 'hammer'),
   row('pushdown', 'Pushdown ai cavi', 'Tricipiti', 'pushdown'),
+  row('pushdown-doppio', 'Pushdown doppio ai cavi', 'Tricipiti', 'pushdown'),
   row('french-press', 'French press', 'Tricipiti', 'skull'),
   row('squat', 'Squat', 'Gambe', 'squat'),
+  row('hack-squat', 'Hack squat', 'Gambe', 'hacksquat'),
+  row('rack-squat', 'Rack squat', 'Gambe', 'squat'),
   row('leg-press', 'Leg press', 'Gambe', 'legpress'),
   row('affondi', 'Affondi con manubri', 'Gambe', 'lunge'),
   row('leg-extension', 'Leg extension', 'Gambe', 'legext'),

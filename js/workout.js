@@ -28,7 +28,7 @@ function prefilledSets(base, last, mode) {
 
 function entry(ex, base, last, mode) {
   return {
-    exerciseId: ex.id, name: ex.name, muscle: ex.muscle, bw: bwFactor(ex),
+    exerciseId: ex.id, name: ex.name, muscle: ex.muscle, muscle2: ex.muscle2 || '', bw: bwFactor(ex),
     base, last, plannedSets: base.length, hint: progressionHint(base, last),
     sets: prefilledSets(base, last, mode), note: '',
   };

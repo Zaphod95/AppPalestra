@@ -12,8 +12,8 @@ ROOT = Path(__file__).resolve().parent.parent
 random.seed(7)
 
 catalog = [
-    {"id": f"c-{i}", "name": n, "muscle": m, "pose": p, "bw": float(bw or 0), "builtin": True}
-    for i, n, m, p, bw in re.findall(r"row\('([^']+)', '([^']+)', '([^']+)', '([^']+)'(?:, ([\d.]+))?\)", (ROOT / "js/catalog.js").read_text(encoding="utf-8"))
+    {"id": f"c-{i}", "name": n, "muscle": m, "muscle2": m2, "pose": p, "bw": float(bw or 0), "builtin": True}
+    for i, n, m, p, bw, m2 in re.findall(r"row\('([^']+)', '([^']+)', '([^']+)', '([^']+)'(?:, ([\d.]+))?(?:, '([^']*)')?\)", (ROOT / "js/catalog.js").read_text(encoding="utf-8"))
 ]
 by_id = {e["id"]: e for e in catalog}
 
@@ -85,7 +85,7 @@ while day <= end:
             elif not kg0 and random.random() < 0.35:
                 bw_reps[ex] += 1
             entries.append({
-                "exerciseId": ex, "name": by_id[ex]["name"], "muscle": by_id[ex]["muscle"], "bw": by_id[ex]["bw"],
+                "exerciseId": ex, "name": by_id[ex]["name"], "muscle": by_id[ex]["muscle"], "muscle2": by_id[ex]["muscle2"], "bw": by_id[ex]["bw"],
                 "base": [{"kg": kg0 or None, "reps": reps} for _ in range(n)], "last": last.get(ex),
                 "plannedSets": n, "sets": sets, "note": random.choice(NOTES) if random.random() < 0.1 else "",
             })

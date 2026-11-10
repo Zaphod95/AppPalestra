@@ -1,7 +1,7 @@
 // Storico e statistiche del singolo allenamento.
 import * as db from './db.js';
 import { actions, confirmBox, dateLong, dateShort, duration, esc, monthLabel, num, setText, thumb, toast } from './ui.js';
-import { bodyweightAt, doneSets, e1rm, exerciseStats, isBodyweight, personalRecords, previousExercise, previousWorkout, setLoad, workoutStats } from './stats.js';
+import { bodyweightAt, doneSets, e1rm, exerciseStats, isBodyweight, personalRecords, previousExercise, previousWorkout, secondaryMuscle, setLoad, workoutStats } from './stats.js';
 import { hbars } from './charts.js';
 
 const go = (h) => { location.hash = h; };
@@ -96,7 +96,7 @@ function exerciseCard(ex, w, all, lib) {
   const bw = isBodyweight(ex);
   const body = bw ? bodyweightAt(w.startedAt) : 0;
   return `<section class="card">
-    <div class="ex-head">${thumb(lib.get(ex.exerciseId), 'sm')}<div class="grow"><h2>${esc(ex.name)}</h2><small class="cap">${esc(ex.muscle)}${bw ? (body ? ` · corpo libero, peso corporeo ${num(body, 1)} kg` : ' · corpo libero') : ''}</small></div></div>
+    <div class="ex-head">${thumb(lib.get(ex.exerciseId), 'sm')}<div class="grow"><h2>${esc(ex.name)}</h2><small class="cap">${esc([ex.muscle, secondaryMuscle(ex)].filter(Boolean).join(' · '))}${bw ? (body ? ` · corpo libero, peso corporeo ${num(body, 1)} kg` : ' · corpo libero') : ''}</small></div></div>
     <table class="sets-table"><thead><tr><th>Serie</th><th>${bw ? 'Zavorra' : 'Kg'}</th><th>Rip</th><th>1RM st.</th></tr></thead><tbody>
       ${doneSets(ex).map((x, i) => {
         const load = setLoad(ex, x, w.startedAt);
