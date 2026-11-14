@@ -1,0 +1,59 @@
+/* Stile Fusione: i colori di Morbido con i caratteri e gli angoli vivi di Industriale.
+   Si applica tramite data-style="fusione" su <html>. */
+
+/* ---------- Fusione: i colori di Morbido con i caratteri e gli angoli vivi di Industriale ---------- */
+:root[data-style="fusione"] {
+  color-scheme: light;
+  --bg: #eef5f3; --surface: #ffffff; --surface-2: #e4f0ed; --line: #cfe1dc;
+  --ink: #15332d; --ink-2: #47645d; --muted: #6f8a83;
+  --accent: #0e8a78; --on-accent: #ffffff; --accent-soft: rgba(14, 138, 120, .12);
+  --good: #12805a; --bad: #c2453b; --danger: #c2453b;
+  --warn: #a45d0a; --warn-soft: rgba(164, 93, 10, .1);
+  --fig: #1f4740; --gear: #94b5ad; --disc: #f08a5d; --thumb: #e4f0ed;
+}
+/* Versione scura: si attiva quando il telefono è in tema scuro. */
+@media (prefers-color-scheme: dark) {
+  :root[data-style="fusione"] {
+    color-scheme: dark;
+    --bg: #0f1a18; --surface: #172422; --surface-2: #203230; --line: #2d433f;
+    --ink: #e8f2ef; --ink-2: #a9bfb9; --muted: #7f9690;
+    --accent: #2ec4ad; --on-accent: #04201b; --accent-soft: rgba(46, 196, 173, .14);
+    --good: #5fd39a; --bad: #ff8a80; --danger: #e5534b;
+    --warn: #f2b84b; --warn-soft: rgba(242, 184, 75, .12);
+    --fig: #dbe9e5; --gear: #6f8984; --disc: #f39a70; --thumb: #203230;
+  }
+  [data-style="fusione"] .card,
+  [data-style="fusione"] .tile,
+  [data-style="fusione"] .item { box-shadow: none; }
+}
+
+[data-style="fusione"] body { font-family: "Barlow", system-ui, sans-serif; }
+[data-style="fusione"] h1,
+[data-style="fusione"] h2,
+[data-style="fusione"] .tile b,
+[data-style="fusione"] .set input,
+[data-style="fusione"] .btn,
+[data-style="fusione"] .date-box b { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; }
+[data-style="fusione"] h1 { text-transform: uppercase; font-size: 30px; letter-spacing: .02em; font-weight: 700; }
+[data-style="fusione"] h2 { text-transform: uppercase; letter-spacing: .04em; font-size: 18px; font-weight: 700; }
+[data-style="fusione"] .btn { text-transform: uppercase; letter-spacing: .06em; font-size: 17px; }
+[data-style="fusione"] .tile b { font-size: 30px; font-weight: 700; }
+[data-style="fusione"] .set input { font-size: 22px; }
+[data-style="fusione"] .card,
+[data-style="fusione"] .tile,
+[data-style="fusione"] .item { border-radius: 4px; border: 1px solid var(--line); box-shadow: 0 4px 14px rgba(21, 51, 45, .06); }
+[data-style="fusione"] .btn,
+[data-style="fusione"] .field,
+[data-style="fusione"] .set input,
+[data-style="fusione"] .tick,
+[data-style="fusione"] .thumb,
+[data-style="fusione"] .seg,
+[data-style="fusione"] .seg button,
+[data-style="fusione"] .howto[open],
+[data-style="fusione"] .banner,
+[data-style="fusione"] .suggest,
+[data-style="fusione"] .pose,
+[data-style="fusione"] dialog.sheet { border-radius: 3px; }
+[data-style="fusione"] .btn.ghost { background: var(--surface); border: 1px solid var(--line); }
+[data-style="fusione"] .set.done input { background: var(--accent-soft); }
+[data-style="fusione"] nav { border-top: 2px solid var(--accent); }
