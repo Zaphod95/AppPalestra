@@ -3,6 +3,7 @@ import * as db from './db.js';
 import { actions, confirmBox, dateShort, duration, esc, num, parseNum, setText, thumb, toast, uid } from './ui.js';
 import { exerciseHistory, muscleTotals, setBodyweights, weekStart, weeklyTotals, workoutStats } from './stats.js';
 import { barChart, hbars, lineChart } from './charts.js';
+import { enterDemo, isDemo } from './demo.js';
 
 const METRICS = [
   { key: 'topKg', label: 'Carico max', unit: 'kg' },
@@ -45,7 +46,9 @@ export async function progressView(main) {
       points: [...body].sort((a, b) => a.t - b.t).map((b) => ({ x: b.t, y: b.kg, label: dateShort(b.t) })),
     });
   };
+  const demoLink = isDemo() ? '' : '<button class="btn ghost wide" data-a="demoEnter">Guarda con dati di esempio</button>';
   const bodyActions = {
+    demoEnter: () => enterDemo(),
     bwSave: async () => {
       const value = parseNum(main.querySelector('[data-bw]').value);
       if (!value || value < 25 || value > 300) { toast('Inserisci un peso valido in kg'); return; }
@@ -64,7 +67,8 @@ export async function progressView(main) {
 
   if (!workouts.length) {
     main.innerHTML = `<header class="top"><h1>Statistiche</h1><a class="link" href="#/guida">Cosa significano?</a></header>
-      <div class="empty"><h2>Ancora nessun allenamento</h2><p>Completa il primo allenamento per vedere i tuoi progressi.</p></div>
+      <div class="empty"><h2>Ancora nessun allenamento</h2><p>Completa il primo allenamento per vedere i tuoi progressi, oppure guarda come appaiono con dei dati di esempio.</p></div>
+      ${demoLink}
       ${bodyCard(body)}`;
     actions(main, bodyActions);
     drawBodyChart();
@@ -114,7 +118,8 @@ export async function progressView(main) {
       <div data-ex-info></div>
     </section>` : ''}
     ${bodyCard(body)}
-    ${muscles.length ? `<section class="card"><h2>Serie per muscolo, ultimi 30 giorni</h2>${hbars(muscles.map(([m, n]) => [esc(m), n]), 'serie')}</section>` : ''}`;
+    ${muscles.length ? `<section class="card"><h2>Serie per muscolo, ultimi 30 giorni</h2>${hbars(muscles.map(([m, n]) => [esc(m), n]), 'serie')}</section>` : ''}
+    ${demoLink}`;
 
   const weeks = weeklyTotals(workouts, 12);
   barChart(main.querySelector('[data-weeks]'), {

@@ -2,9 +2,9 @@
 const CACHE = 'palestra-__BUILD__';
 const FILES = [
   './', 'index.html', 'manifest.webmanifest', 'css/style.css',
-  'icons/icon-192.png', 'icons/icon-512.png',
+  'icons/icon-192.png', 'icons/icon-512.png', 'esempio/palestra-esempio.json',
   'js/app.js', 'js/catalog.js', 'js/charts.js', 'js/data.js', 'js/db.js', 'js/exercises.js',
-  'js/guide.js', 'js/history.js', 'js/plans.js', 'js/progress.js', 'js/stats.js', 'js/ui.js', 'js/workout.js',
+  'js/demo.js', 'js/guide.js', 'js/history.js', 'js/plans.js', 'js/progress.js', 'js/stats.js', 'js/ui.js', 'js/workout.js',
 ];
 
 self.addEventListener('install', (e) => {

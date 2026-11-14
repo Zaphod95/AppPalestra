@@ -9,6 +9,7 @@ import { progressView } from './progress.js';
 import { dataView } from './data.js';
 import { guideView } from './guide.js';
 import { setBodyweights } from './stats.js';
+import { dropDemo, exitDemo, isDemo, loadDemo } from './demo.js';
 
 const main = document.getElementById('main');
 const nav = document.getElementById('nav');
@@ -74,6 +75,27 @@ async function seed() {
     const pose = NAMED_POSES[e.name.trim().toLowerCase()];
     if (!e.builtin && !e.pose && !e.photo && pose) await db.put('exercises', { ...e, pose });
   }
+  await fixAbCircuit(saved);
+}
+
+// Correzione una tantum: il circuito addominali era segnato a corpo libero, e così
+// ogni ripetizione contava come l'intero peso corporeo. Ora conta solo le ripetizioni,
+// anche negli allenamenti già salvati.
+async function fixAbCircuit(saved) {
+  if (await db.getMeta('fix-circuito')) return;
+  const ids = new Set([...saved.values()]
+    .filter((e) => !e.builtin && e.name.trim().toLowerCase() === 'circuito addominali' && e.bw > 0)
+    .map((e) => e.id));
+  for (const id of ids) await db.put('exercises', { ...await db.get('exercises', id), bw: 0 });
+  const unweight = (w) => {
+    let changed = false;
+    for (const e of w?.exercises || []) if (ids.has(e.exerciseId) && e.bw) { e.bw = 0; changed = true; }
+    return changed;
+  };
+  for (const w of await db.all('workouts')) if (unweight(w)) await db.put('workouts', w);
+  const active = await db.getMeta('active');
+  if (unweight(active)) await db.setMeta('active', active);
+  await db.setMeta('fix-circuito', true);
 }
 
 async function registerWorker() {
@@ -98,6 +120,14 @@ async function registerWorker() {
   document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
 }
 
+if (isDemo()) {
+  await loadDemo(db);
+  const bar = document.getElementById('demo-bar');
+  bar.hidden = false;
+  bar.querySelector('button').onclick = exitDemo;
+} else {
+  dropDemo();
+}
 await seed();
 navigator.storage?.persist?.();
 window.addEventListener('hashchange', route);

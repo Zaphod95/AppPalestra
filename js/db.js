@@ -1,5 +1,8 @@
 // Archivio locale (IndexedDB): tutti i dati restano sul dispositivo.
-const NAME = 'palestra';
+import { DEMO_DB, isDemo } from './demo.js';
+
+// In modalità esempio si usa un archivio a parte.
+const NAME = isDemo() ? DEMO_DB : 'palestra';
 const VERSION = 2;
 const STORES = ['exercises', 'plans', 'workouts', 'meta', 'body'];
 let conn;

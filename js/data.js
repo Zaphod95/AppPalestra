@@ -1,6 +1,7 @@
 // Impostazioni e backup dei dati.
 import * as db from './db.js';
 import { actions, confirmBox, dateShort, toast } from './ui.js';
+import { enterDemo, exitDemo, isDemo } from './demo.js';
 export const BACKUP_EVERY_DAYS = 14;
 
 async function downloadBackup() {
@@ -70,12 +71,19 @@ export async function dataView(main) {
       <label class="radio"><input type="radio" name="prefill" value="base" ${prefill === 'base' ? 'checked' : ''}>
         <span><b>Valori di base</b><small>Parti sempre dai valori inseriti nella scheda.</small></span></label>
     </section>
-    <section class="card"><h2>Backup</h2>
+    <section class="card"><h2>Dati di esempio</h2>
+      ${isDemo()
+        ? `<p class="hint">Stai guardando dati di esempio. Quando esci tornano i tuoi dati veri, che non sono mai stati toccati.</p>
+           <button class="btn primary wide" data-a="demoExit">Esci dai dati di esempio</button>`
+        : `<p class="hint">Mostra l'app piena di allenamenti finti, per vedere come appaiono storico e statistiche. Usa un archivio a parte: i tuoi dati non vengono toccati e tornano quando esci.</p>
+           <button class="btn ghost wide" data-a="demoEnter">Guarda con dati di esempio</button>`}
+    </section>
+    ${isDemo() ? '' : `<section class="card"><h2>Backup</h2>
       <p class="hint">I dati esistono solo su questo dispositivo. Salva un backup almeno ogni ${BACKUP_EVERY_DAYS} giorni, comprese foto e pesate.
         <b data-last>${lastBackup ? `Ultimo backup: ${dateShort(lastBackup)}.` : 'Non hai ancora salvato un backup.'}</b></p>
       <button class="btn primary wide" data-a="export">Salva backup</button>
       <label class="btn ghost wide">Ripristina da file<input type="file" accept=".json,application/json" data-file hidden></label>
-    </section>
+    </section>`}
     <p class="hint center">Versione ${build ? build.replace('palestra-', '') : 'di sviluppo'}</p>`;
 
   main.onchange = async (e) => {
@@ -87,6 +95,8 @@ export async function dataView(main) {
     }
   };
   actions(main, {
+    demoEnter: () => enterDemo(),
+    demoExit: exitDemo,
     export: async () => {
       if (!await downloadBackup()) return;
       await db.setMeta('lastBackup', Date.now());

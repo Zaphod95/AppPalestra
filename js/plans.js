@@ -3,6 +3,7 @@ import * as db from './db.js';
 import { actions, confirmBox, dateShort, esc, inputNum, modal, parseNum, pickExercise, summarizeSets, thumb, toast, uid } from './ui.js';
 import { startWorkout } from './workout.js';
 import { BACKUP_EVERY_DAYS } from './data.js';
+import { enterDemo } from './demo.js';
 
 const go = (h) => { location.hash = h; };
 const newDay = (n) => ({ id: uid(), name: `Giorno ${String.fromCharCode(64 + n)}`, exercises: [] });
@@ -34,10 +35,12 @@ export async function plansView(main) {
             <button class="btn primary sm" data-a="start" data-plan="${esc(p.id)}" data-day="${esc(d.id)}" ${d.exercises.length ? '' : 'disabled'}>Inizia</button>
           </div>`).join('')}
       </section>`).join('') : `
-      <div class="empty"><h2>Crea la tua prima scheda</h2><p>Dividila in giorni, aggiungi gli esercizi e inserisci carichi e ripetizioni di base.</p></div>`}
+      <div class="empty"><h2>Crea la tua prima scheda</h2><p>Dividila in giorni, aggiungi gli esercizi e inserisci carichi e ripetizioni di base.</p>
+        <button class="btn ghost" data-a="demo">Guarda prima un esempio</button></div>`}
     <button class="btn wide ${plans.length ? 'ghost' : 'primary'}" data-a="add">+ Nuova scheda</button>`;
 
   actions(main, {
+    demo: () => enterDemo('#/'),
     add: async () => {
       const plan = { id: uid(), name: 'Nuova scheda', createdAt: Date.now(), days: [newDay(1)] };
       await db.put('plans', plan);

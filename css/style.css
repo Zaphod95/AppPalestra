@@ -45,7 +45,7 @@ b { font-weight: 650; }
 .stack { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 .empty { text-align: center; padding: 56px 20px; color: var(--ink-2); }
 .empty h2 { font-size: 20px; color: var(--ink); margin-bottom: 6px; }
-.empty p { margin: 0; }
+.empty p { margin: 0 0 16px; }
 .hint { color: var(--muted); font-size: 13px; margin: 0; }
 .center { text-align: center; }
 .label { font-size: 13px; color: var(--ink-2); margin-bottom: -6px; }
@@ -187,6 +187,8 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, .6); }
 .sheet .field, .sheet .set input { background: var(--surface-2); }
 .confirm { margin: 6px 0; font-size: 17px; }
 
+.demo-bar { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 16px; background: var(--warn-soft); border-bottom: 1px solid var(--warn); font-size: 14px; backdrop-filter: blur(8px); }
+.demo-bar b { color: var(--warn); margin-right: 4px; }
 .update { position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 16px; background: var(--surface-2); font-size: 14px; }
 .suggest { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); font-size: 14px; }
 .suggest b { color: var(--ink); }
