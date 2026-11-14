@@ -1,6 +1,7 @@
 // Libreria esercizi: nome, gruppo muscolare e immagine.
 import * as db from './db.js';
 import { MUSCLES, NAMED_POSES, POSE_NAMES, figure } from './catalog.js';
+import { infoBlock } from './info.js';
 import { actions, confirmBox, esc, modal, muscleLabel, photoToThumb, thumb, toast, uid } from './ui.js';
 
 export async function exercisesView(main) {
@@ -37,6 +38,7 @@ export async function exercisesView(main) {
 function editor(original, isNew, onDone) {
   const ex = { ...original };
   modal(`<div class="sheet-head"><h2>${isNew ? 'Nuovo esercizio' : 'Modifica esercizio'}</h2><button class="icon-btn" data-a="close" aria-label="Chiudi">✕</button></div>
+    ${infoBlock(ex, true)}
     <div class="photo-row"><span data-preview>${thumb(ex, 'lg')}</span>
       <div class="stack">
         <label class="btn ghost sm">Scegli foto<input type="file" accept="image/*" data-file hidden></label>

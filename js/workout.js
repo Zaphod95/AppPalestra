@@ -2,6 +2,7 @@
 import * as db from './db.js';
 import { actions, clock, confirmBox, esc, inputNum, num, parseNum, pickExercise, setText, thumb, toast, uid } from './ui.js';
 import { bwFactor, progressionHint, workoutStats } from './stats.js';
+import { infoBlock } from './info.js';
 
 const go = (h) => { location.hash = h; };
 
@@ -99,6 +100,7 @@ export async function workoutView(main, onLeave) {
               <div class="past">${history('Base', e.base, e.bw)}${history('Ultima', e.last, e.bw)}</div></div>
             <button class="icon-btn sm" data-a="exDel" aria-label="Rimuovi dall'allenamento">✕</button>
           </div>
+          ${infoBlock(e)}
           ${!w.editingId && hintPending(e) ? `<div class="suggest"><span>↑ ${hintText(e)}</span>
             <div class="row"><button class="btn primary sm" data-a="hintApply">Applica</button><button class="btn ghost sm" data-a="hintSkip">No, grazie</button></div></div>` : ''}
           <div class="sets-head"><span>Serie</span><span>${e.bw ? '+Kg' : 'Kg'}</span><span>Rip</span><span>Fatta</span></div>
