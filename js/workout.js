@@ -4,7 +4,6 @@ import { actions, clock, confirmBox, esc, inputNum, num, parseNum, pickExercise,
 import { bwFactor, progressionHint, workoutStats } from './stats.js';
 
 const go = (h) => { location.hash = h; };
-export const REST_DEFAULT = 90;
 
 function lastPerformance(exerciseId, dayId, workouts) {
   const sorted = [...workouts].sort((a, b) => b.startedAt - a.startedAt);
@@ -62,38 +61,11 @@ function hintText(e) {
     : 'Prova <b>1 ripetizione in più</b>: l\'ultima volta hai fatto tutte le ripetizioni previste.';
 }
 
-// Segnale sonoro breve a fine recupero (la vibrazione non c'è su iPhone).
-let audio;
-function unlockAudio() {
-  try {
-    audio ||= new (window.AudioContext || window.webkitAudioContext)();
-    if (audio.state === 'suspended') audio.resume();
-  } catch { /* nessun audio disponibile */ }
-}
-function beep() {
-  navigator.vibrate?.([250, 120, 250]);
-  if (!audio) return;
-  try {
-    for (const at of [0, 0.3]) {
-      const o = audio.createOscillator();
-      const g = audio.createGain();
-      o.frequency.value = 880;
-      g.gain.setValueAtTime(0.25, audio.currentTime + at);
-      g.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + at + 0.22);
-      o.connect(g).connect(audio.destination);
-      o.start(audio.currentTime + at);
-      o.stop(audio.currentTime + at + 0.24);
-    }
-  } catch { /* ignora */ }
-}
-
 export async function workoutView(main, onLeave) {
   const w = await db.getMeta('active');
   if (!w) { go('#/'); return; }
-  const [library, settings] = await Promise.all([db.all('exercises'), db.getMeta('settings', {})]);
+  const library = await db.all('exercises');
   const lib = new Map(library.map((e) => [e.id, e]));
-  const restOn = settings.restOn !== false;
-  const restSec = settings.restSec || REST_DEFAULT;
   const save = () => db.setMeta('active', w);
 
   const summaryLine = () => {
@@ -144,53 +116,12 @@ export async function workoutView(main, onLeave) {
     tick();
   }
 
-  // Barra del recupero, fissa sopra il menu in basso.
-  const bar = document.createElement('div');
-  bar.id = 'rest';
-  bar.hidden = true;
-  bar.innerHTML = `<div class="rest-time"><small>Recupero</small><b data-left></b></div>
-    <button class="btn ghost sm" data-r="-15">−15 s</button>
-    <button class="btn ghost sm" data-r="15">+15 s</button>
-    <button class="btn primary sm" data-r="skip">Fine</button>`;
-  document.body.append(bar);
-  onLeave(() => bar.remove());
-  let doneShownUntil = 0;
-  bar.onclick = (e) => {
-    const b = e.target.closest('[data-r]');
-    if (!b || !w.restEndsAt) return;
-    if (b.dataset.r === 'skip') w.restEndsAt = null;
-    else w.restEndsAt = Math.max(Date.now() + 1000, w.restEndsAt + Number(b.dataset.r) * 1000);
-    save();
-    paintRest();
-  };
-  function paintRest() {
-    const now = Date.now();
-    if (w.restEndsAt && now >= w.restEndsAt) {
-      if (now - w.restEndsAt < 5000) beep();
-      w.restEndsAt = null;
-      save();
-      doneShownUntil = now + 4000;
-    }
-    if (w.restEndsAt) {
-      bar.hidden = false;
-      bar.classList.remove('over');
-      bar.querySelector('[data-left]').textContent = clock(w.restEndsAt - now + 999);
-    } else if (now < doneShownUntil) {
-      bar.hidden = false;
-      bar.classList.add('over');
-      bar.querySelector('[data-left]').textContent = 'Recupero finito';
-    } else {
-      bar.hidden = true;
-    }
-  }
-
   const clockFixed = w.editingId ? w.endedAt - w.startedAt : null;
   function tick() {
     const el = main.querySelector('[data-clock]');
     if (el) el.textContent = clock(clockFixed ?? Date.now() - w.startedAt);
-    paintRest();
   }
-  const timer = setInterval(tick, 500);
+  const timer = setInterval(tick, 1000);
   onLeave(() => clearInterval(timer));
 
   const exOf = (t) => w.exercises[Number(t.closest('[data-e]').dataset.e)];
@@ -220,7 +151,7 @@ export async function workoutView(main, onLeave) {
       return;
     }
     if (done < total && !await confirmBox(`${total - done} serie non spuntate non verranno salvate. Terminare?`, { ok: 'Termina' })) return;
-    const { editingId, restEndsAt, ...record } = w;
+    const { editingId, restEndsAt, ...record } = w; // restEndsAt: residuo del vecchio timer
     record.id = editingId || w.id;
     record.endedAt = editingId ? w.endedAt : Date.now();
     record.exercises = w.exercises.map((e) => ({ ...e, sets: e.sets.filter((s) => s.done) }));
@@ -239,13 +170,11 @@ export async function workoutView(main, onLeave) {
       if (s.done) {
         s.kg ??= 0;
         s.doneAt ||= Date.now();
-        if (restOn && !w.editingId) { unlockAudio(); w.restEndsAt = Date.now() + restSec * 1000; }
       } else delete s.doneAt;
       row.classList.toggle('done', s.done);
       t.setAttribute('aria-pressed', s.done);
       save();
       paintSummary();
-      paintRest();
       if (e.hint && !hintPending(e)) main.querySelector(`[data-e="${w.exercises.indexOf(e)}"] .suggest`)?.remove();
     },
     hintApply: async (t) => {

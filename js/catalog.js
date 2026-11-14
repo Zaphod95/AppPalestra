@@ -41,6 +41,9 @@ const POSES = {
   cablefly: { b: ['50,28 50,52', '38,28 62,28', '38,28 34,44 46,54', '62,28 66,44 54,54', '42,90 42,70 50,52 58,70 58,90'], h: [50, 15], g: ['8,6 46,54', '92,6 54,54'], d: [[8, 6, 4], [92, 6, 4]] },
   shrug: { b: ['50,26 50,52', '36,24 64,24', '36,24 34,54', '64,24 66,54', '42,90 42,70 50,52 58,70 58,90'], h: [50, 12], g: ['24,57 44,57', '56,57 76,57'], d: [[24, 57, 5], [76, 57, 5]] },
   hacksquat: { b: ['76,84 64,62 46,66 34,38', '35,40 44,34'], h: [30, 27], g: ['26,34 40,72', '68,90 88,74'] },
+  machinecurl: { b: [SEAT, '44,38 60,50 66,32'], h: [44, 25], g: [...SEAT_G, '52,56 72,46'], d: [[67, 29, 4]] },
+  abcircuit: { b: ['76,86 62,64 44,84 26,68', '26,68 34,58'], h: [20, 58], g: ['8,90 92,90'], a: ['M70 34 A13 13 0 1 1 82 41', 'M82 41 L75 42 M82 41 L81 34'] },
+  reversefly: { b: ['50,36 50,64', '36,36 64,36', '36,36 12,38', '64,36 88,38', '38,88 38,68 50,64 62,68 62,88'], h: [50, 24], g: ['8,28 8,48', '92,28 92,48', '30,70 70,70', '50,70 50,90'] },
   generic: { b: [], g: ['28,50 72,50'], d: [[24, 50, 12], [76, 50, 12], [14, 50, 8], [86, 50, 8]] },
 };
 
@@ -49,9 +52,20 @@ export function figure(pose) {
   const lines = (arr, cls) => (arr || []).map((s) => `<polyline class="${cls}" points="${s}"/>`).join('');
   const discs = (p.d || []).map(([x, y, r]) => `<circle class="fd" cx="${x}" cy="${y}" r="${r}"/>`).join('');
   const bells = (p.m || []).map(([x, y]) => `<path class="fm" d="M${x - 7} ${y}H${x + 7}M${x - 7} ${y - 5}V${y + 5}M${x + 7} ${y - 5}V${y + 5}"/>`).join('');
+  const arcs = (p.a || []).map((d) => `<path class="fg" d="${d}"/>`).join('');
   const head = p.h ? `<circle class="fh" cx="${p.h[0]}" cy="${p.h[1]}" r="7"/>` : '';
-  return `<svg class="fig" viewBox="0 0 100 100" aria-hidden="true">${lines(p.g, 'fg')}${lines(p.b, 'fb')}${head}${discs}${bells}</svg>`;
+  return `<svg class="fig" viewBox="0 0 100 100" aria-hidden="true">${lines(p.g, 'fg')}${arcs}${lines(p.b, 'fb')}${head}${discs}${bells}</svg>`;
 }
+
+// Illustrazioni tra cui scegliere per i tuoi esercizi.
+export const POSE_NAMES = Object.keys(POSES);
+
+// Esercizi creati nell'app con questi nomi ricevono in automatico un'illustrazione.
+export const NAMED_POSES = {
+  'curl macchinario': 'machinecurl',
+  'circuito addominali': 'abcircuit',
+  'esercizio spalle schiena': 'reversefly',
+};
 
 export const MUSCLES = ['Petto', 'Schiena', 'Spalle', 'Trapezio', 'Bicipiti', 'Tricipiti', 'Gambe', 'Glutei', 'Polpacci', 'Addome', 'Altro'];
 

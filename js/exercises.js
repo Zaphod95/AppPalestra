@@ -1,6 +1,6 @@
 // Libreria esercizi: nome, gruppo muscolare e immagine.
 import * as db from './db.js';
-import { MUSCLES } from './catalog.js';
+import { MUSCLES, NAMED_POSES, POSE_NAMES, figure } from './catalog.js';
 import { actions, confirmBox, esc, modal, muscleLabel, photoToThumb, thumb, toast, uid } from './ui.js';
 
 export async function exercisesView(main) {
@@ -42,6 +42,9 @@ function editor(original, isNew, onDone) {
         <label class="btn ghost sm">Scegli foto<input type="file" accept="image/*" data-file hidden></label>
         <button class="btn ghost sm" data-a="clear" ${ex.photo ? '' : 'hidden'}>Rimuovi foto</button>
       </div></div>
+    <details class="pose-pick"><summary>Scegli un'illustrazione</summary>
+      <div class="pose-grid">${POSE_NAMES.map((p) => `<button class="pose ${p === (ex.pose || 'generic') ? 'on' : ''}" data-a="pose" data-p="${p}" aria-label="Illustrazione ${p}">${figure(p)}</button>`).join('')}</div>
+    </details>
     <label class="label">Nome</label>
     <input class="field" data-name value="${esc(ex.name)}" autocomplete="off">
     <label class="label">Gruppo muscolare</label>
@@ -69,6 +72,13 @@ function editor(original, isNew, onDone) {
     actions(d, {
       close,
       clear: () => { delete ex.photo; paint(); },
+      // Scegliere un'illustrazione sostituisce l'eventuale foto.
+      pose: (t) => {
+        ex.pose = t.dataset.p;
+        delete ex.photo;
+        d.querySelectorAll('.pose').forEach((b) => b.classList.toggle('on', b === t));
+        paint();
+      },
       save: async () => {
         ex.name = d.querySelector('[data-name]').value.trim();
         ex.muscle = d.querySelector('[data-muscle]').value;
@@ -77,6 +87,7 @@ function editor(original, isNew, onDone) {
         // Mantiene la quota del catalogo (per esempio 0,65 nei piegamenti).
         ex.bw = d.querySelector('[data-bw]').checked ? (ex.bw > 0 ? ex.bw : 1) : 0;
         if (!ex.name) { toast('Inserisci un nome'); return; }
+        if (!ex.pose && !ex.photo) ex.pose = NAMED_POSES[ex.name.toLowerCase()];
         await db.put('exercises', ex);
         close();
         onDone();

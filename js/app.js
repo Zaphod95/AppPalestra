@@ -1,6 +1,6 @@
 // Avvio dell'app, navigazione e aggiornamenti.
 import * as db from './db.js';
-import { CATALOG } from './catalog.js';
+import { CATALOG, NAMED_POSES } from './catalog.js';
 import { planEditView, plansView } from './plans.js';
 import { exercisesView } from './exercises.js';
 import { workoutView } from './workout.js';
@@ -69,6 +69,11 @@ async function seed() {
     known.add(c.id);
   }
   await db.setMeta('catalogIds', [...known]);
+  // Esercizi creati da te senza immagine: se il nome è noto ricevono la sua illustrazione.
+  for (const e of saved.values()) {
+    const pose = NAMED_POSES[e.name.trim().toLowerCase()];
+    if (!e.builtin && !e.pose && !e.photo && pose) await db.put('exercises', { ...e, pose });
+  }
 }
 
 async function registerWorker() {

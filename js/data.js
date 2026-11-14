@@ -1,9 +1,6 @@
 // Impostazioni e backup dei dati.
 import * as db from './db.js';
 import { actions, confirmBox, dateShort, toast } from './ui.js';
-import { REST_DEFAULT } from './workout.js';
-
-const REST_CHOICES = [45, 60, 90, 120, 150, 180, 240];
 export const BACKUP_EVERY_DAYS = 14;
 
 async function downloadBackup() {
@@ -58,8 +55,6 @@ export async function dataView(main) {
   const settings = await db.getMeta('settings', {});
   const lastBackup = await db.getMeta('lastBackup', null);
   const prefill = settings.prefill || 'last';
-  const restOn = settings.restOn !== false;
-  const restSec = settings.restSec || REST_DEFAULT;
   const build = typeof caches !== 'undefined' ? (await caches.keys()).find((k) => k.startsWith('palestra-')) : null;
   const saveSettings = async (patch) => {
     Object.assign(settings, patch);
@@ -75,12 +70,6 @@ export async function dataView(main) {
       <label class="radio"><input type="radio" name="prefill" value="base" ${prefill === 'base' ? 'checked' : ''}>
         <span><b>Valori di base</b><small>Parti sempre dai valori inseriti nella scheda.</small></span></label>
     </section>
-    <section class="card"><h2>Timer di recupero</h2>
-      <label class="radio"><input type="checkbox" data-rest-on ${restOn ? 'checked' : ''}>
-        <span><b>Avvia quando spunti una serie</b><small>A fine recupero il telefono suona e, su Android, vibra. Tienilo con lo schermo acceso: a schermo spento il suono può non arrivare.</small></span></label>
-      <label class="label" for="rest-sec">Durata</label>
-      <select class="field" id="rest-sec" data-rest-sec>${REST_CHOICES.map((s) => `<option value="${s}" ${s === restSec ? 'selected' : ''}>${s < 60 ? `${s} secondi` : `${Math.floor(s / 60)} min${s % 60 ? ` ${s % 60} s` : ''}`}</option>`).join('')}</select>
-    </section>
     <section class="card"><h2>Backup</h2>
       <p class="hint">I dati esistono solo su questo dispositivo. Salva un backup almeno ogni ${BACKUP_EVERY_DAYS} giorni, comprese foto e pesate.
         <b data-last>${lastBackup ? `Ultimo backup: ${dateShort(lastBackup)}.` : 'Non hai ancora salvato un backup.'}</b></p>
@@ -92,8 +81,6 @@ export async function dataView(main) {
   main.onchange = async (e) => {
     const t = e.target;
     if (t.name === 'prefill') await saveSettings({ prefill: t.value });
-    else if (t.matches('[data-rest-on]')) await saveSettings({ restOn: t.checked });
-    else if (t.matches('[data-rest-sec]')) await saveSettings({ restSec: Number(t.value) });
     else if (t.matches('[data-file]') && t.files[0]) {
       await restoreBackup(t.files[0]);
       t.value = '';

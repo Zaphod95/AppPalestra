@@ -24,7 +24,6 @@ const TERMS = [
   ]],
   ['Durante l\'allenamento', [
     ['Suggerimento di carico', 'Se l\'ultima volta hai fatto tutte le ripetizioni previste in ogni serie, l\'app ti propone di aumentare: 1 kg sotto i 20 kg, altrimenti circa il 5% arrotondato a 2,5 kg. Negli esercizi senza carico propone una ripetizione in più. Decidi tu se applicarlo.'],
-    ['Timer di recupero', 'Parte quando spunti una serie e ti avvisa alla fine. Durata e attivazione si cambiano in Dati e impostazioni, con l\'icona in alto nella pagina Schede.'],
     ['Zavorra (+Kg)', 'Negli esercizi a corpo libero la colonna “+Kg” è il peso che aggiungi, per esempio con una cintura. Lasciala a 0 se non usi zavorra.'],
   ]],
 ];
