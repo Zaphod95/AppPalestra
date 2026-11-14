@@ -1,0 +1,99 @@
+/* Stili grafici alternativi, in prova. Ognuno ridefinisce i colori di style.css
+   e qualche dettaglio di forma e carattere. Si attivano con data-style su <html>. */
+
+/* ---------- Industriale: scuro, arancio da cantiere, angoli vivi, titoli condensati ---------- */
+:root[data-style="industriale"] {
+  color-scheme: dark;
+  --bg: #111214; --surface: #1b1d20; --surface-2: #26292d; --line: #3a3e44;
+  --ink: #f4f1ec; --ink-2: #b9b4ab; --muted: #8a857c;
+  --accent: #ff6a1a; --on-accent: #1a0a00; --accent-soft: rgba(255, 106, 26, .14);
+  --good: #7bd88f; --bad: #ff8a80; --danger: #e5484d;
+  --warn: #ffc24b; --warn-soft: rgba(255, 194, 75, .12);
+  --fig: #e9e5de; --gear: #6f6a62; --disc: #ff6a1a; --thumb: #26292d;
+}
+[data-style="industriale"] body { font-family: "Barlow", system-ui, sans-serif; }
+[data-style="industriale"] h1,
+[data-style="industriale"] h2,
+[data-style="industriale"] .tile b,
+[data-style="industriale"] .set input,
+[data-style="industriale"] .btn { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; }
+[data-style="industriale"] h1 { text-transform: uppercase; font-size: 30px; letter-spacing: .02em; }
+[data-style="industriale"] h2 { text-transform: uppercase; letter-spacing: .04em; font-size: 18px; }
+[data-style="industriale"] .btn { text-transform: uppercase; letter-spacing: .06em; font-size: 17px; }
+[data-style="industriale"] .tile b { font-size: 30px; }
+[data-style="industriale"] .set input { font-size: 22px; }
+[data-style="industriale"] .card,
+[data-style="industriale"] .tile,
+[data-style="industriale"] .item { border-radius: 3px; border: 1px solid var(--line); }
+[data-style="industriale"] .btn,
+[data-style="industriale"] .field,
+[data-style="industriale"] .set input,
+[data-style="industriale"] .tick,
+[data-style="industriale"] .thumb,
+[data-style="industriale"] .seg,
+[data-style="industriale"] .seg button,
+[data-style="industriale"] .howto[open],
+[data-style="industriale"] .banner { border-radius: 2px; }
+[data-style="industriale"] .card { border-left: 3px solid var(--accent); }
+[data-style="industriale"] nav { background: #0b0c0d; }
+
+/* ---------- Acciaio: chiaro e tecnico, blu cobalto, bordi sottili, numeri monospazio ---------- */
+:root[data-style="acciaio"] {
+  color-scheme: light;
+  --bg: #eef1f5; --surface: #ffffff; --surface-2: #f2f4f8; --line: #d7dde6;
+  --ink: #0f1b2d; --ink-2: #44526a; --muted: #6b778b;
+  --accent: #2453d6; --on-accent: #ffffff; --accent-soft: rgba(36, 83, 214, .09);
+  --good: #13804b; --bad: #c4372f; --danger: #c4372f;
+  --warn: #a35f00; --warn-soft: rgba(163, 95, 0, .09);
+  --fig: #1c2a40; --gear: #9aa6b8; --disc: #2453d6; --thumb: #eef1f5;
+}
+[data-style="acciaio"] body { font-family: "IBM Plex Sans", system-ui, sans-serif; }
+[data-style="acciaio"] .tile b,
+[data-style="acciaio"] .set input,
+[data-style="acciaio"] .hval,
+[data-style="acciaio"] .sets-table td,
+[data-style="acciaio"] small [data-clock] { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+[data-style="acciaio"] h1 { font-weight: 600; letter-spacing: -.02em; }
+[data-style="acciaio"] .card,
+[data-style="acciaio"] .tile,
+[data-style="acciaio"] .item { border-radius: 6px; border: 1px solid var(--line); box-shadow: 0 1px 0 rgba(15, 27, 45, .04); }
+[data-style="acciaio"] .btn,
+[data-style="acciaio"] .field,
+[data-style="acciaio"] .set input,
+[data-style="acciaio"] .tick,
+[data-style="acciaio"] .thumb,
+[data-style="acciaio"] .seg,
+[data-style="acciaio"] .howto[open] { border-radius: 5px; }
+[data-style="acciaio"] .set input,
+[data-style="acciaio"] .tick,
+[data-style="acciaio"] .field { border: 1px solid var(--line); background: var(--surface); }
+[data-style="acciaio"] .tile small,
+[data-style="acciaio"] .sets-head span { text-transform: uppercase; letter-spacing: .08em; font-size: 11px; }
+[data-style="acciaio"] nav { border-top: 1px solid var(--line); }
+[data-style="acciaio"] .btn.ghost { background: var(--surface); border: 1px solid var(--line); }
+
+/* ---------- Morbido: chiaro, verde acqua, forme arrotondate, ombre leggere ---------- */
+:root[data-style="morbido"] {
+  color-scheme: light;
+  --bg: #eef5f3; --surface: #ffffff; --surface-2: #e4f0ed; --line: #d3e4df;
+  --ink: #15332d; --ink-2: #47645d; --muted: #6f8a83;
+  --accent: #0e8a78; --on-accent: #ffffff; --accent-soft: rgba(14, 138, 120, .12);
+  --good: #12805a; --bad: #c2453b; --danger: #c2453b;
+  --warn: #a45d0a; --warn-soft: rgba(164, 93, 10, .1);
+  --fig: #1f4740; --gear: #94b5ad; --disc: #f08a5d; --thumb: #e4f0ed;
+}
+[data-style="morbido"] body { font-family: "Nunito", system-ui, sans-serif; }
+[data-style="morbido"] h1, [data-style="morbido"] h2, [data-style="morbido"] .tile b { font-weight: 800; }
+[data-style="morbido"] .card,
+[data-style="morbido"] .tile,
+[data-style="morbido"] .item { border-radius: 22px; box-shadow: 0 6px 18px rgba(21, 51, 45, .07); }
+[data-style="morbido"] .card { padding: 18px; }
+[data-style="morbido"] .btn { border-radius: 999px; }
+[data-style="morbido"] .field,
+[data-style="morbido"] .set input,
+[data-style="morbido"] .tick { border-radius: 14px; }
+[data-style="morbido"] .thumb { border-radius: 18px; }
+[data-style="morbido"] .seg, [data-style="morbido"] .seg button { border-radius: 999px; }
+[data-style="morbido"] .howto[open] { border-radius: 16px; }
+[data-style="morbido"] nav { margin: 0 12px 10px; border-radius: 22px; border: 0; box-shadow: 0 8px 24px rgba(21, 51, 45, .14); left: 0; right: 0; }
+[data-style="morbido"] .set.done input { background: var(--accent-soft); }
